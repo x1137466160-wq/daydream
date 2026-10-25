@@ -114,7 +114,7 @@ svg{display:block}
   mask-image:linear-gradient(180deg,#000 0%,#000 52%,transparent 96%);
 }
 /* 全局漂浮极光 */
-.aurora{position:absolute;border-radius:50%;filter:blur(80px);pointer-events:none;z-index:0}
+.aurora{position:absolute;border-radius:50%;filter:blur(54px);pointer-events:none;z-index:0}
 .aurora.a1{width:540px;height:540px;left:-7%;top:-12%;opacity:.55;
   background:radial-gradient(circle,rgba(255,210,228,.8),rgba(255,210,228,0) 66%);
   animation:aurora1 26s ease-in-out infinite alternate}
@@ -1016,6 +1016,13 @@ svg{display:block}
 .veil-hint .eq b:nth-child(3){animation-delay:.4s}
 /* 帷幕在时，Hero 入场动画暂停，掀开后才开始 */
 .veiled .hero *,.veiled .hero{animation-play-state:paused!important}
+/* 开屏掀开前隐藏主站全部内容，避免慢加载/大文件时两侧泡泡、背景先闪现 */
+.veiled body > *:not(#veil){visibility:hidden}
+/* 掀开后主站整体柔光淡入，浮现更顺滑不生硬 */
+.hero.hero-enter{animation:heroFadeIn .9s ease-out both}
+@keyframes heroFadeIn{from{opacity:0}to{opacity:1}}
+/* 常驻漂浮/光斑层交给合成层，减少主线程重绘卡顿 */
+.spheres,.bubbles-left,.aurora,.veil-fog,.hero-spark{will-change:transform}
 
 /* ================= 梦里寄来的信 ================= */
 .envelope{
@@ -1078,8 +1085,8 @@ svg{display:block}
 @keyframes drawLine{to{stroke-dashoffset:0}}
 @keyframes twinkle{0%,100%{opacity:.25;transform:scale(.75) rotate(0deg)}50%{opacity:1;transform:scale(1.12) rotate(35deg)}}
 @keyframes eq{0%,100%{transform:scaleY(.35)}50%{transform:scaleY(1)}}
-@keyframes aurora1{0%{transform:translate(0,0) scale(1)}100%{transform:translate(5%,7%) scale(1.12)}}
-@keyframes aurora2{0%{transform:translate(0,0) scale(1)}100%{transform:translate(-6%,5%) scale(1.08)}}
+@keyframes aurora1{0%{transform:translate(0,0) scale(1)}100%{transform:translate(3%,4%) scale(1.07)}}
+@keyframes aurora2{0%{transform:translate(0,0) scale(1)}100%{transform:translate(-3.5%,3%) scale(1.05)}}
 @keyframes captionBob{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-5px)}}
 @keyframes dustRise{0%{opacity:0;transform:translateY(6px) scale(.4) rotate(0deg)}
   20%{opacity:.85}100%{opacity:0;transform:translateY(-26px) scale(1.1) rotate(90deg)}}
@@ -2002,10 +2009,14 @@ function stopNudge(){ clearTimeout(nudgeTimer); }
     var c = FX.center(orb);
     FX.flash(c.x, c.y);
     FX.ring(c.x, c.y, 220); FX.ring(c.x, c.y, 360, 120);
-    FX.burst(c.x, c.y, {count:28, kinds:["bub","star","heart","bub"], spread:Math.min(window.innerWidth*.45, 320)});
+    FX.burst(c.x, c.y, {count:18, kinds:["bub","star","heart","bub"], spread:Math.min(window.innerWidth*.45, 320)});
     veil.classList.add("opening");
     // 等帷幕完全淡出后再解除锁定，避免半透明帷幕与提前启动的主站动画同框交叠
-    setTimeout(function(){ document.documentElement.classList.remove("veiled"); }, REDUCED ? 0 : 1150);
+    setTimeout(function(){
+      document.documentElement.classList.remove("veiled");
+      var h = document.getElementById("hero");
+      if(h) h.classList.add("hero-enter");
+    }, REDUCED ? 0 : 1150);
     setTimeout(function(){
       veil.remove();
       scheduleNudge();
